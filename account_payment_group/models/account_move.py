@@ -3,6 +3,7 @@
 
 from odoo import models, api, fields, _
 from odoo.exceptions import ValidationError, UserError
+from odoo.tools.sql import index_exists, drop_index
 
 
 class AccountMove(models.Model):
@@ -37,12 +38,6 @@ class AccountMove(models.Model):
         store=True,
     )
 
-    @api.constrains('name', 'journal_id', 'state')
-    def _check_unique_sequence_number(self):
-        payment_group_moves = self.filtered(
-            lambda x: x.journal_id.type in ['cash', 'bank'] and x.payment_id.payment_group_id)
-        return super(AccountMove, self - payment_group_moves)._check_unique_sequence_number()
-
     def _compute_payment_groups(self):
         """
         El campo en invoices "payment_id" no lo seteamos con los payment groups
@@ -51,12 +46,11 @@ class AccountMove(models.Model):
         for rec in self:
             rec.payment_group_ids = rec._get_reconciled_payments().mapped('payment_group_id')
 
-    @api.depends('line_ids.account_id.internal_type', 'line_ids.reconciled')
+    @api.depends('line_ids.account_id.account_type', 'line_ids.reconciled')
     def _compute_open_move_lines(self):
         for rec in self:
             rec.open_move_line_ids = rec.line_ids.filtered(
-                lambda r: not r.reconciled and r.account_id.internal_type in (
-                    'payable', 'receivable'))
+                lambda r: not r.reconciled and r.account_id.account_type in ['asset_receivable','liability_payable'])
 
     def action_register_payment_group(self):
         to_pay_move_lines = self.open_move_line_ids
@@ -64,7 +58,7 @@ class AccountMove(models.Model):
             raise UserError(_('Nothing to be paid on selected entries'))
         to_pay_partners = self.mapped('commercial_partner_id')
         if len(to_pay_partners) > 1:
-            raise UserError(_('Selected records must be of the same partner'))
+            raise UserError(_('Selected recrods must be of the same partner'))
 
         return {
             'name': _('Register Payment'),
@@ -73,7 +67,7 @@ class AccountMove(models.Model):
             'target': 'current',
             'type': 'ir.actions.act_window',
             'context': {
-                'default_partner_type': 'customer' if to_pay_move_lines[0].account_id.internal_type == 'receivable' else 'supplier',
+                'default_partner_type': 'customer' if to_pay_move_lines[0].account_id.account_type == 'asset_receivable' else 'supplier',
                 'default_partner_id': to_pay_partners.id,
                 'default_to_pay_move_line_ids': to_pay_move_lines.ids,
                 # We set this because if became from other view and in the context has 'create=False'
@@ -82,11 +76,6 @@ class AccountMove(models.Model):
                 'default_company_id': self.company_id.id,
             },
         }
-
-    def action_register_payment(self):
-        ''' This method is extended to work like action_register_payment_group() and not like the native odoo method,
-        the register payment button will act like the "Registrar Pago" server action '''
-        return self.action_register_payment_group()
 
     def action_post(self):
         res = super(AccountMove, self).action_post()
@@ -109,7 +98,7 @@ class AccountMove(models.Model):
                     partner_type = 'customer'
 
                 pay_context = {
-                    'default_to_pay_move_line_ids': (rec.open_move_line_ids.ids),
+                    'to_pay_move_line_ids': (rec.open_move_line_ids.ids),
                     'default_company_id': rec.company_id.id,
                     'default_partner_type': partner_type,
                 }
@@ -209,21 +198,16 @@ class AccountMove(models.Model):
             args += [('payment_group_id', '=', False)]
         return super()._search(args, offset=offset, limit=limit, order=order, count=count, access_rights_uid=access_rights_uid)
 
-    @api.model
-    def _deduce_sequence_number_reset(self, name):
-        """ Cuando tenemos un move asociado al payment group queremos que el move tenga el mismo nombre que el del payment
-        group. Esto para que en cualquier reporte aparezca este nombre de referencia.
+    def _auto_init(self):
+        super()._auto_init()
+        # Update the generic unique name constraint to not consider the purchases in latam companies.
+        # The name should be unique by partner for those documents.
+        drop_index(self.env.cr, "account_move_unique_name", self._table)
+        self.env.cr.execute("""
+            CREATE UNIQUE INDEX account_move_unique_name
+                                ON account_move(name, journal_id)
+                            WHERE (state = 'posted' AND name != '/'
+                            AND (l10n_latam_document_type_id IS NULL OR move_type NOT IN ('in_invoice', 'in_refund', 'in_receipt')))
+                            AND payment_group_id IS NULL;
+        """)
 
-        En verion 15 hay una constraint nueva _constrains_date_sequence que trae un problema. cuando vamos a validar un
-        account.move revisa el nombre/secuencia que le fue asignado con un regex para encontrar algo parecido a un
-        año y lo compara con el año de la fecha del move y si son diferentes años no permite continuar. Ejemplo:
-        Tenemos un pago de proveedor que se llama OP - 2022 - 00012345 y lo validamos y generamos los account.move en el
-        año 2023. El resultado es que nos salta la excpeción indicando que la secuencia que queremos asignar al move no
-        es valida y debe corresponder al año.
-
-        Para fines del account.move no queremos que esto aplique. No importa que nombre utilice el payment.group queremos
-        que al validarse se traslade el nombre a los move generados. La modificacion de este metodo logra evitar esa
-        comparacion de fechas"""
-        if self.payment_group_id:
-            return 'never'
-        return super()._deduce_sequence_number_reset(name)
