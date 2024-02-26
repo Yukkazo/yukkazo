@@ -70,7 +70,6 @@ class AccountTax(models.Model):
                                 if abg.credit:
                                     selected_debt_untaxed += (
                                         abg.credit * -1.00)
-           
             vals['withholdable_invoiced_amount'] = selected_debt_untaxed
             vals['withholdable_base_amount'] = base_amount
             vals['period_withholding_amount'] = amount
@@ -79,22 +78,10 @@ class AccountTax(models.Model):
             regimen = payment_group.regimen_islr_id
             vals = super(AccountTax, self).get_withholding_vals(
                 payment_group, force_withholding_amount_type)
+
             to_pay = payment_group.to_pay_move_line_ids[0]
-            selected_debt_untaxed = (to_pay.move_id.amount_untaxed_signed * -1.00)
-            if to_pay:
-                product_off = ''
-                amount_off = 0.00
-                if to_pay.move_id.line_ids:
-                    # for li in to_pay.move_id.invoice_line_ids:
-                    #     if li.product_id.product_tmpl_id.disable_islr:
-                    #         product_off = li.product_id.display_name
-                    # if product_off:
-                    for abg in to_pay.move_id.line_ids:
-                        if abg.name == product_off:
-                            amount_off += abg.debit
-                    selected_debt_untaxed = (
-                        to_pay.move_id.amount_untaxed_signed * -1.00) - amount_off
-            base = selected_debt_untaxed
+            base = (
+                to_pay.move_id.amount_untaxed_signed * -1.00)
             base_withholding = base * (
                 regimen.withholding_base_percentage / 100)
             withholding_percentage = 0.0
@@ -114,19 +101,18 @@ class AccountTax(models.Model):
                 if regimen.type_subtracting == 'amount' and \
                     band.type_amount == 'ut':
                     subtracting = band.withholding_amount * \
-                        regimen.seniat_ut_id.amount
-                
+                    regimen.seniat_ut_id.amount
+
                 elif regimen.type_subtracting == 'amount' and \
                     band.type_amount == 'bs':
                     subtracting = band.withholding_amount
-                            
-                
+
             if subtracting > 0.0:
                 withholding = (base_withholding *
                                withholding_percentage) - subtracting
             else:
                 withholding = base_withholding * withholding_percentage
-    
+
             vals['comment_withholding'] = str(withholding_percentage*100)+"%"
             vals['total_amount'] = base
             vals['withholdable_invoiced_amount'] = base
@@ -146,7 +132,6 @@ class AccountTax(models.Model):
 
     def get_partner_alicuot(self, partner):
         self.ensure_one()
-        
         if partner.vat_retention:
             alicuot = partner.vat_retention
         else:
@@ -157,7 +142,7 @@ class AccountTax(models.Model):
 
         return alicuot
 
-    #TODO:Ubicar una mejor forma de hacer el inherit    
+    #TODO:Ubicar una mejor forma de hacer el inherit
     def create_payment_withholdings(self, payment_group):
         for tax in self.filtered(lambda x: x.withholding_type != 'none'):
             payment_withholding = self.env[
@@ -220,7 +205,7 @@ class AccountTax(models.Model):
                 payment_method = self.env.ref(
                     'account_withholding.'
                     'account_payment_method_out_withholding')
-                if tax.withholding_type == 'partner_tax':
+                if payment_group.iva:
                     journal = self.env['account.journal'].search([
                         ('company_id', '=', tax.company_id.id),
                         ('outbound_payment_method_line_ids.payment_method_id',
@@ -228,11 +213,10 @@ class AccountTax(models.Model):
                         ('type', 'in', ['cash', 'bank']),
                         ('apply_iva', '=', True),
                     ], limit=1)
-                if tax.withholding_type == 'tabla_islr':
+                if payment_group.islr:
                     journal = self.env['account.journal'].search([
                         ('company_id', '=', tax.company_id.id),
-                        ('outbound_payment_method_line_ids.payment_method_id',
-                        '=', payment_method.id),
+                        ('outbound_payment_method_line_ids.payment_method_id','=', payment_method.id),
                         ('type', 'in', ['cash', 'bank']),
                         ('apply_islr', '=', True),
                     ], limit=1)

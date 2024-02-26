@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 from odoo import models, fields, api, _
 from datetime import datetime, timedelta
 from re import search
-import pandas as pd
 import json
 # import time
 import logging
@@ -18,40 +17,7 @@ import shutil
 import base64
 import csv
 import xlwt
-
-_logger = logging.getLogger(__name__)
-
-try:
-    import xlsxwriter
-
-    class PatchedXlsxWorkbook(xlsxwriter.Workbook):
-        def _check_sheetname(self, sheetname, is_chartsheet=False):
-            try:
-                return super()._check_sheetname(sheetname, is_chartsheet=is_chartsheet)
-            except xlsxwriter.exceptions.DuplicateWorksheetName:
-                pattern = re.compile(r"~[0-9]{2}$")
-                duplicated_secuence = (
-                    re.search(pattern, sheetname) and int(sheetname[-2:]) or 0
-                )
-                # Only up to 100 duplicates
-                deduplicated_secuence = "~{:02d}".format(duplicated_secuence + 1)
-                if duplicated_secuence > 99:
-                    raise xlsxwriter.exceptions.DuplicateWorksheetName  # noqa: B904
-                if duplicated_secuence:
-                    sheetname = re.sub(pattern, deduplicated_secuence, sheetname)
-                elif len(sheetname) <= 28:
-                    sheetname += deduplicated_secuence
-                else:
-                    sheetname = sheetname[:28] + deduplicated_secuence
-            # Refeed the method until we get an unduplicated name
-            return self._check_sheetname(sheetname, is_chartsheet=is_chartsheet)
-
-    # "Short string"
-
-    xlsxwriter.Workbook = PatchedXlsxWorkbook
-
-except ImportError:
-    _logger.debug("Can not import xlsxwriter`.")
+import pandas as pd
 
 
 class ResumenIVA(models.TransientModel):
@@ -81,9 +47,9 @@ class ResumenIVA(models.TransientModel):
     # def generate_xls_report(self, workbook, data, account_vat):
         workbook = xlsxwriter.Workbook(BytesIO, self.get_workbook_options())
         account_vat = self.env['account.vat.ledger'].search([
-                ('date_from', '>=', self.date_from),
-                ('date_to', '<=', self.date_to)
-            ])
+            ('date_from', '>=',self.date_to),
+            ('date_to', '<=', self.date_from)
+        ])
         for obj in account_vat:
             report_name = obj.name
             sheet = workbook.add_worksheet(report_name[:31])
@@ -242,7 +208,7 @@ class ResumenIVA(models.TransientModel):
             sheet2.write(37, 6, ' 7 ', title_style)
 
             # Guardando en local el Excel generado
-            writer.save()
+            writer.close()
             wb.close()
             buffer.seek(0)
             content = buffer.read()
@@ -255,8 +221,7 @@ class ResumenIVA(models.TransientModel):
                     self._name, self.id, self.date_from, self.date_to),
 
         }
-
-
+            
     def get_workbook_options(self):
         """
         See https://xlsxwriter.readthedocs.io/workbook.html constructor options

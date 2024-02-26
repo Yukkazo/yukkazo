@@ -17,7 +17,7 @@
                         name="regimen_islr_id" 
                         attrs="{'invisible': [('islr', '!=', True)], 'required': [('islr', '!=', False), ('state', 'in', ['draft', 'confirmed'])]}" 
                         domain="[('id', 'in', partner_regimen_islr_ids)]" 
-                        options='{"no_open": True, "no_create": True}'/>
+                        options='{"no_open": True, "no_create": True}'/>                        
                 </field>
                 <field name="selected_debt" position="replace">
                     <field name="debt_multicurrency" invisible="1"/>
@@ -46,10 +46,6 @@
                             '|','|', ('partner_type', '!=', 'supplier'), ('state', 'not in', ['draft', 'confirmed']),
                             ('iva', '!=', True),('islr', '!=', True)
                         ]}"/>
-                </xpath>
-
-                <xpath expr="//group[@name='group4']/field[@name='payment_difference']" position="after">
-                    <button name="set_line_pay" type="object" class="oe_highlight" string="Agregar retención" attrs="{'invisible':[('iva', '!=', True)]}"/>
                 </xpath>
             </field>
         </record>

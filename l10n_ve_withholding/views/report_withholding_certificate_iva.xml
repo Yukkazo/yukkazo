@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_withholding_certificate_document_iva_inherit" inherit_id="l10n_ve_withholding.report_withholding_certificate_document_iva">
+        <xpath expr="//t" position="replace">
+            <t t-call="web.basic_layout">
+                <t t-set="o" t-value="o.with_context(lang=lang)" />
+                <t t-set="report_date" t-value="o.date"/>
+                <t t-set="report_number" t-value="o.withholding_number or o.name"/>
+                <t t-set="report_name" t-value="'CERTIFICADO DE RETENCIÓN DEL IMPUESTO AL VALOR AGREGADO IVA'"/>
+                <div class="page">
+                    <div class="row">
+                        <div class="col-6 mt-3 text-start">
+                            <span>
+                                Ley del I.V.A. - Art. 11 "Serán responsables del pago del Impuesto en calidad de agentes de retención,
+                            </span>
+                            <br/>
+                            <span>
+                                los comprobantes o adquirientes de determinados bienes muebles y los receptores de ciertos servicios,
+                            </span>
+                            <br/>
+                            <span>
+                                a quienes la administración Tributaria designe como tal" 
+                            </span>
+                        </div>
+                        <div class="col-1" />
+                        <div class="col-3">
+                            <table class="text-center table border border-dark">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            N° DE COMPROBANTE
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span t-esc="report_number" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-1" />
+                        <div class="col-1">
+                        <table class="text-center table border border-dark">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            FECHA
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span t-esc="report_date" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table></div>
+                    </div>
+                    <div class="row mt-5">
+                        <div class="col-4 ml-1">
+                            <table class="text-center table border border-dark">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            RAZON SOCIAL DEL AGENTE DE RETENCION
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span t-field="o.company_id.name"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-1" />
+                        <div class="col-5">
+                            <table class="text-center table border border-dark">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            REGISTRO DE INFORMACION FISCAL DEL AGENTE DE RETENCION
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span t-field="o.company_id.partner_id.l10n_latam_identification_type_id.l10n_ve_code"/>-<span t-field="o.company_id.vat"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-1" />
+                        <div class="col-1">
+                        <table class="text-center table border border-dark" style="font-size: 12px;">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            PERIODO FISCAL
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span t-esc="o._get_fiscal_period(report_date)"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table></div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-7 ml-1">
+                            <table class="text-center table border border-dark">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            DIRECCION DEL AGENTE DE RETENCION
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span t-esc="o.company_id.partner_id" t-options='{"widget": "contact", "fields": ["address"], "no_marker": True, "no_tag_br": True}'/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-4 ml-1">
+                            <table class="text-center table border border-dark">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            NOMBRE Y RAZON SOCIAL DE SUJETO RETENIDO
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span t-field="o.partner_id.name"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-1" />
+                        <div class="col-5">
+                            <table class="text-center table border border-dark">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            REGISTRO DE INFORMACION FISCAL DEL SUJETO RETENIDO (R.I.F)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span t-field="o.partner_id.l10n_latam_identification_type_id.l10n_ve_code"/>-<span t-field="o.partner_id.vat"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <br/>
+                    <table class="table table-sm o_main_table">
+                        <thead>
+                            <tr>
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th class="text-center border border-dark" colspan="3"><strong>COMPRAS INTERNAS O IMPORTACIONES</strong></th>
+                                <th />
+                            </tr>
+                            <tr class="border border-dark">
+                                <th class="text-center"><strong>No</strong></th>
+                                <th class="text-center"><strong>Fecha Dto</strong></th>
+                                <th class="text-center"><strong>Número de factura</strong></th>
+                                <th class="text-center"><strong>Número de Control</strong></th>
+                                <th class="text-center"><strong>Número N/D</strong></th>
+                                <th class="text-center"><strong>Número N/C</strong></th>
+                                <th class="text-center"><strong>Tipo</strong></th>
+                                <th class="text-center"><strong>Dto Afectado</strong></th>
+                                <th class="text-center"><strong>Total Compra con IVA</strong></th>
+                                <th class="text-center"><strong>Compras sin crédito</strong></th>
+                                <th class="text-center"><strong>Base Imponible</strong></th>
+                                <th class="text-center"><strong>% Alic</strong></th>
+                                <th class="text-center"><strong>Impuesto IVA</strong></th>
+                                <th class="text-center"><strong>IVA Retenido</strong></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border border-dark">
+                                <th class="text-center">1</th>
+                                <th class="text-center" style="font-size: 12px;"><span t-esc="report_date"/></th>
+                                <t t-if="o.payment_group_id.state == 'draft'">
+                                    <th class="text-center"><span t-field="o.payment_group_id.to_pay_move_line_ids[0].move_id.name"/></th>
+                                    <th class="text-center"><span t-field="o.payment_group_id.to_pay_move_line_ids[0].move_id.l10n_ve_document_number"/></th>
+                                </t>
+                                <t t-else="">
+                                    <th class="text-center"><span t-field="o.payment_group_id.matched_move_line_ids[0].move_id.name"/></th>
+                                    <th class="text-center"><span t-field="o.payment_group_id.matched_move_line_ids[0].move_id.l10n_ve_document_number"/></th>
+                                </t>
+                                <th class="text-center"></th>
+                                <th class="text-center"></th>
+                                <th class="text-center">01</th>
+                                <th class="text-center"></th>
+                                <th class="text-center"><span t-field="o.total_amount"/></th>
+                                <th class="text-center">0,00</th>
+                                <th class="text-center"><span t-field="o.withholdable_invoiced_amount"/></th>
+                                <th class="text-center"><span t-field="o.tax_withholding_id.description"/></th>
+                                <th class="text-center"><span t-field="o.withholdable_base_amount"/></th>
+                                <th class="text-end"><span t-field="o.computed_withholding_amount"/></th>
+                            </tr>
+                            <tr class="border border-dark">
+                                <th class="text-center" colspan="8">TOTALES</th>
+                                <th class="text-center"><span t-field="o.total_amount"/></th>
+                                <th class="text-center">0,00</th>
+                                <th class="text-center"><span t-field="o.withholdable_invoiced_amount"/></th>
+                                <th />
+                                <th class="text-center"><span t-field="o.withholdable_base_amount"/></th>
+                                <th class="text-end"><span t-field="o.computed_withholding_amount"/></th>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="row mt-5">
+                        <div class="col-9" />
+                        <div class="col-2"><strong>MONTO A PAGAR.................................</strong></div>
+                        <div class="col-1 text-end border-bottom border-dark border-2"><strong><span t-field="o.computed_withholding_amount"/></strong></div>
+                    </div>
+                    <div class="row mt-5 text-center">
+                        <div class="col-2" style="margin-top: 100px;"></div>
+                        <div name="footer_left_column" class="col-4" style="margin-top: 100px;">
+                            ________________________ <br/>
+                            Agente de Retención
+                        </div>
+                        <div class="col-2" style="margin-top: 100px;"></div>
+                        <div name="footer_right_column" class="col-4" style="margin-top: 100px;">
+                            _______________________<br/>
+                            Beneficiario
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </xpath>
+    </template>
+</odoo>

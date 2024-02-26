@@ -28,7 +28,6 @@ class AccountPaymentGroup(models.Model):
         'seniat.tabla.islr', 
         'Aplicativo ISLR'
     )
-    amount_withheld = fields.Monetary(string='Cantidad retenida')
     partner_regimen_islr_ids = fields.Many2many(
         'seniat.tabla.islr',
         compute='_partner_regimenes_islr',
@@ -142,30 +141,3 @@ class AccountPaymentGroup(models.Model):
                 rec.unreconciled_amount = rec.to_pay_amount - rec.selected_finacial_debt
             else:
                 rec.unreconciled_amount = rec.to_pay_amount - rec.selected_debt
-
-    def set_line_pay(self):
-        account_move = self.env['account.move'].browse(self._context.get('active_id', False))
-        self.amount_withheld = (self.selected_debt * (int(self.partner_id.vat_retention) / 100))
-        view = self.env.ref('l10n_ve_withholding.create_line_to_pay_form')
-        return {
-            'name': _("Linea de pago"),
-            'type': 'ir.actions.act_window',
-            'view_type': 'form',
-            'view_mode': 'form',
-            'res_model': 'create.line.to.pay',
-            'view_id': view.id,
-            'target': 'new',
-            'context': {
-                'default_balance': self.payment_difference,
-                'default_suggested_amount_residual': self.amount_withheld,
-                'default_date': account_move.invoice_date if account_move else False,
-                'default_date_maturity': account_move.invoice_date_due if account_move else False,
-                'default_move_id': account_move.id if account_move else False,
-                'default_journal_id': account_move.journal_id.id if account_move else False,
-                'default_name': account_move.name if account_move else False,
-                'default_account_id': self.partner_id.account_id.id,
-                'default_line_type': 'debit',
-                'invoice_user_id': account_move.invoice_user_id.id if account_move else False,
-                'account_group_id': self.id,
-            }
-        }

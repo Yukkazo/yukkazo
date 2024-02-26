@@ -30,7 +30,3 @@ class ResPartner(models.Model):
         string='Régimen ISLR Aplicar',
         domain="[('seniat_partner_type_id', '=', seniat_partner_type_id)]",
     )
-    account_id = fields.Many2one(
-        'account.account',
-        string='Cuenta'
-    )

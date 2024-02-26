@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_withholding_certificate_document" inherit_id="l10n_ve_withholding.report_withholding_certificate_document">
+        <xpath expr="//t" position="replace">
+            <t t-call="web.basic_layout">
+                <t t-set="o" t-value="o.with_context(lang=lang)" />
+                <div class="page">
+                    <div class="row">
+                        <div class="col-12">
+                            <h6>COMPROBANTE DE RETENCION DE IMPUESTO SOBRE LA RENTA</h6>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-8">
+                            <span style="font-size: 9px;">
+                                DECRETO 1.808 DE FECHA 23 DE ABRIL DE 1997
+                            </span>
+                            <br/>
+                            <span style="font-size: 9px;">
+                                GACETA OFICIAL N° 36.203 DE FECHA 12 DE MAYO DE 1997
+                            </span>
+                        </div>
+                        <div class="col-4">
+                            <t t-set="report_date" t-value="o.date"/>
+                            <t t-set="report_number" t-value="o.withholding_number or o.name"/>
+                            <table class="text-center table border border-dark">
+                                <thead>
+                                    <tr>
+                                        <th class="p-1">FECHA</th>
+                                        <th class="p-1">N° COMPROBANTE</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="p-1"><span t-esc="report_date"/></td>
+                                        <td class="p-1"><span t-esc="report_number"/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <table class="table border border-dark">
+                        <tbody>
+                            <tr class="text-center">
+                                <th colspan="12">DATOS DEL AGENTE DE RETENCION</th>
+                            </tr>
+                            <tr>
+                                <th class="text-start" style="width:250px;">NOMBRE O RAZON SOCIAL</th>
+                                <td colspan="9"><span t-field="o.company_id.partner_id.name" /></td>
+                            </tr>
+                            <tr>
+                                <th class="text-start" style="width:250px;">DIRECCION FISCAL</th>
+                                <td colspan="9"><span t-esc="o.company_id.partner_id" t-options='{"widget": "contact", "fields": ["address"], "no_marker": True, "no_tag_br": True}'/></td>
+                            </tr>
+                            <tr>
+                                <th class="text-start"  style="width:250px;">RIF.</th>
+                                <td colspan="9"><span t-field="o.company_id.partner_id.l10n_latam_identification_type_id.l10n_ve_code"/>-<span t-field="o.company_id.partner_id.vat"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <t t-set="partner" t-value="o.partner_id"/>
+                    <table class="table border border-dark">
+                        <tbody>
+                            <tr class="text-center">
+                                <th colspan="12">DATOS DEL AGENTE BENEFICIARIO</th>
+                            </tr>
+                            <tr>
+                                <th class="text-start" style="width:250px;">NOMBRE O RAZON SOCIAL</th>
+                                <td colspan="9"><span t-esc="partner.name" /></td>
+                            </tr>
+                            <tr>
+                                <th class="text-start" style="width:250px;">DIRECCION FISCAL</th>
+                                <td colspan="9"><span t-esc="o.partner_id" t-options='{"widget": "contact", "fields": ["address"], "no_marker": True, "no_tag_br": True}'/></td>
+                            </tr>
+                            <tr>
+                                <th class="text-start" style="width:250px;">RIF.</th>
+                                <td colspan="9"><span t-field="o.partner_id.l10n_latam_identification_type_id.l10n_ve_code"/>-<span t-field="o.partner_id.vat"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table border border-dark">
+                        <thead>
+                            <tr>
+                                <th colspan="9">DATOS DEL IMPUESTO RETENIDO (CONCEPTO)</th>
+                                <th colspan="3">COD. ARCHIVO XML</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="9"><span t-field="o.payment_group_id.regimen_islr_id.code_seniat"/> - <span t-field="o.payment_group_id.regimen_islr_id.activity_name"/></td>
+                                <td colspan="3">
+                                    <t t-foreach="o.payment_group_id.to_pay_move_line_ids" t-as="i">
+                                        Nro: <span t-field="i.move_id.l10n_ve_document_number"/>, 
+                                        <t t-if="i.move_id.move_type == out_invoice">
+                                            Fact: <span t-field="i.move_id.name"/>
+                                        </t>
+                                        <t t-else="">
+                                            Fact: <span t-field="i.move_id.ref"/>
+                                        </t>
+                                    </t>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table mb-2">
+                        <thead class="border border-dark">
+                            <tr>
+                                <th>FECHA EMISION</th>
+                                <th>N° FACTURA</th>
+                                <th>N° CONTROL</th>
+                                <th>MONTO TOTAL</th>
+                                <th>BASE RETENCION</th>
+                                <th>% RETENCION</th>
+                                <th style="width:250px;">VALOR RETENCION</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border border-dark">
+                                <td class="text-center"><span t-field="o.date" /></td>
+                                    <t t-if="o.payment_group_id.state == 'draft'">
+                                        <td class="text-center"><span t-field="o.payment_group_id.to_pay_move_line_ids[0].move_id.name"/></td>
+                                        <td class="text-center"><span t-field="o.payment_group_id.to_pay_move_line_ids[0].move_id.l10n_ve_document_number"/></td>
+                                    </t>
+                                    <t t-else="">
+                                        <td class="text-center"><span t-field="o.payment_group_id.matched_move_line_ids[0].move_id.name"/></td>
+                                        <td class="text-center"><span t-field="o.payment_group_id.matched_move_line_ids[0].move_id.l10n_ve_document_number"/></td>
+                                    </t>
+                                <td class="text-center"><span t-field="o.total_amount"/></td>
+                                <td class="text-center"><span t-field="o.withholdable_invoiced_amount"/></td>
+                                <td class="text-center"><span t-field="o.tax_withholding_id.description"/></td>
+                                <td class="text-center" style="width:250px;"><span t-field="o.computed_withholding_amount"/></td>
+                            </tr>
+                            <tr>
+                                <td class="border-bottom-0 border-end-0"/>
+                                <td class="border-bottom-0 border-end-0"/>
+                                <td class="text-end border border-dark border-3"><strong>TOTAL</strong></td>
+                                <td class="text-center border-dark border-3"><strong><span t-field="o.total_amount"/></strong></td>
+                                <td class="text-center border-end-0"><strong><span t-field="o.withholdable_invoiced_amount"/></strong></td>
+                                <td class="text-end border-dark border-3"><strong>TOTAL</strong></td>
+                                <td class="text-center border-dark border-3" style="width:250px;"><span t-field="o.computed_withholding_amount"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="row mb-5 mt-3">
+                        <div class="col-7"/>
+                        <div class="col-5">
+                            <table class="table border border-dark border-3">
+                                <tbody>
+                                    <tr>
+                                        <th>TOTAL IMPUE0STO RETENIDO</th>
+                                        <th class="text-center border-dark border-start border-3" style="width:250px;"><span t-field="o.computed_withholding_amount"/></th>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row mt-5">
+                        <div class="col-2" style="margin-top: 100px;"></div>
+                        <div name="footer_left_column" class="col-4 text-center" style="margin-top: 100px;">
+                            ________________________ <br/>
+                            Agente de Retención
+                        </div>
+                        <div class="col-2" style="margin-top: 100px;"></div>
+                        <div name="footer_right_column" class="col-4 text-center" style="margin-top: 100px;">
+                            _______________________<br/>
+                            Beneficiario
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </xpath>
+    </template>
+
+    <record id="report_qweb_paperformat_inherit" model="report.paperformat">
+        <field name="name">Account financial report qweb inherith</field>
+        <field name="default" eval="True"/>
+        <field name="format">custom</field>
+        <field name="page_height">297</field>
+        <field name="page_width">210</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">12</field>
+        <field name="margin_bottom">8</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">10</field>
+        <field name="dpi">110</field>
+        <field name="orientation">Landscape</field>
+    </record>
+
+    <report
+        string="Certificado de Retención"
+        id="l10n_ve_withholding.action_report_withholding_certificate"
+        model="account.payment"
+        report_type="qweb-pdf"
+        name="l10n_ve_withholding.report_withholding_certificate"
+        file="l10n_ve_withholding.report_withholding_certificate"
+        print_report_name="'Certificado de Retención - %s' % (object.withholding_number or '')"
+        paperformat="report_qweb_paperformat_inherit"
+    />
+
+</odoo>
