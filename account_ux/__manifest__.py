@@ -19,7 +19,7 @@
 ##############################################################################
 {
     'name': 'Account UX',
-    'version': "15.0.1.8.0",
+    'version': "16.0.1.2.0",
     'category': 'Accounting',
     'sequence': 14,
     'summary': '',
@@ -39,15 +39,12 @@
         'wizards/account_change_currency_views.xml',
         'wizards/res_config_settings_views.xml',
         'views/account_journal_views.xml',
-        'views/account_bank_statement_views.xml',
         'views/account_move_line_views.xml',
         'views/account_reconcile_views.xml',
         'views/res_partner_views.xml',
         'views/account_partial_reconcile_views.xml',
         'views/account_account_views.xml',
-        'views/account_type_views.xml',
         'views/account_move_views.xml',
-        'data/ir_actions_server_data.xml',
     ],
     'demo': [
     ],
